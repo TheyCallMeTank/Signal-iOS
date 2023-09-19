@@ -130,7 +130,9 @@ public extension ThreadUtil {
                 stickerType: stickerMetadata.stickerType,
                 emoji: stickerMetadata.firstEmoji
             )
-            enqueueMessage(message, stickerDraft: stickerDraft, thread: thread)
+            DispatchQueue.main.async {
+                enqueueMessage(message, stickerDraft: stickerDraft, thread: thread)
+            }
         }
         return message
     }

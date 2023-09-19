@@ -68,6 +68,7 @@ end
 target 'Signal' do
   project 'Signal.xcodeproj', 'Debug' => :debug, 'Release' => :release
 
+  pod 'LookinServer', :configuration => ['Debug']
   # Pods only available inside the main Signal app
   pod 'SSZipArchive', podspec: 'ThirdParty/SSZipArchive.podspec'
   ui_pods

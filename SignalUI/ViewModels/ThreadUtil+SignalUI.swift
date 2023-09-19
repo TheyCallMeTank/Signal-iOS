@@ -10,6 +10,7 @@ public extension ThreadUtil {
     // MARK: - Durable Message Enqueue
 
     @discardableResult
+    // 消息入列
     class func enqueueMessage(
         body messageBody: MessageBody?,
         mediaAttachments: [SignalAttachment] = [],
@@ -130,7 +131,7 @@ extension OutgoingMessagePreparer {
         let truncatedText: String?
         let bodyRanges: MessageBodyRanges?
 
-        if let messageBody = messageBody, !messageBody.text.isEmpty {
+        if let messageBody = messageBody, !messageBody.text.isEmpty {  // 文字长度超过2K
             if messageBody.text.lengthOfBytes(using: .utf8) >= kOversizeTextMessageSizeThreshold {
                 truncatedText = messageBody.text.truncated(toByteCount: kOversizeTextMessageSizeThreshold)
                 bodyRanges = messageBody.ranges
@@ -158,7 +159,7 @@ extension OutgoingMessagePreparer {
 
         let isVoiceMessage = attachments.count == 1 && attachments.last?.isVoiceMessage == true
 
-        var isViewOnceMessage = false
+        var isViewOnceMessage = false   // 阅后即焚
         for attachment in mediaAttachments {
             if attachment.isViewOnceAttachment {
                 assert(mediaAttachments.count == 1)
@@ -173,6 +174,7 @@ extension OutgoingMessagePreparer {
         }
 
         // Discard quoted reply for view-once messages.
+        // 引用的消息，阅后即焚的消息不引用
         let quotedMessage: TSQuotedMessage? = (isViewOnceMessage
                                                ? nil
                                                : quotedReplyModel?.buildQuotedMessageForSending())

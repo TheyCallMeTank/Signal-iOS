@@ -6,6 +6,11 @@
 import Foundation
 import LibSignalClient
 
+/// MessageBodyRanges是从消息中解析“SSKProtoBodyRange”的结果；
+/// 它对重叠等进行一些清理，确保我们有一个标准的非重叠表示，也可以用于作曲家中的消息草稿。
+///
+/// 此对象必须进一步应用于NSAttributedString，以实际显示提及和样式。
+
 /// MessageBodyRanges is the result of parsing `SSKProtoBodyRange` from a message;
 /// it performs some cleanups for overlaps and such, ensuring that we have a standard
 /// non-overlapping representation which can also be used for message drafts in the composer.

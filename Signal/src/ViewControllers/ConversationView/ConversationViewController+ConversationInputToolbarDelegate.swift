@@ -74,6 +74,7 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
         }
 
         guard !isBlockedConversation() else {
+            // 拉黑需解除才能发消息
             showUnblockConversationUI { [weak self] isBlocked in
                 if !isBlocked {
                     self?.tryToSendTextMessage(messageBody, updateKeyboardState: false)
@@ -82,6 +83,7 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
             return
         }
 
+        // 认证邮箱
         let didShowSNAlert = showSafetyNumberConfirmationIfNecessary(
             confirmationText: SafetyNumberStrings.confirmSendButton
         ) { [weak self] didConfirmIdentity in
@@ -98,6 +100,7 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
             return
         }
 
+        // 新联系人？
         let didAddToProfileWhitelist = ThreadUtil.addThreadToProfileWhitelistIfEmptyOrPendingRequestAndSetDefaultTimerWithSneakyTransaction(thread)
 
         if inputToolbar.editTarget != nil {
@@ -145,7 +148,9 @@ extension ConversationViewController: ConversationInputToolbarDelegate {
             return
         }
 
+        // 真正开始发送流程
         let message = Self.databaseStorage.read { transaction in
+            // 消息入库
             ThreadUtil.enqueueMessage(
                 body: messageBody,
                 thread: self.thread,
