@@ -299,14 +299,17 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
 
     _isVoiceMessage = outgoingMessageBuilder.isVoiceMessage;
 
+    // 新的传出消息应立即从当前线程状态确定其收件人列表。
     // New outgoing messages should immediately determine their
     // recipient list from current thread state.
     NSMutableSet<SignalServiceAddress *> *recipientAddresses = [NSMutableSet new];
     if ([self isKindOfClass:[OWSOutgoingSyncMessage class]]) {
+        // 用于同步状态的消息只应发送到链接的设备。
         // 1. Sync messages should only be sent to linked devices.
         OWSAssertDebug(TSAccountManager.localAddress);
         [recipientAddresses addObject:TSAccountManager.localAddress];
     } else {
+        // 获取群组收件人
         // 2. Most messages should only be sent to the current members of the group.
         [recipientAddresses addObjectsFromArray:[thread recipientAddressesWithTransaction:transaction]];
         // 3. V2 group updates should also be sent to pending members of the group
@@ -1215,6 +1218,7 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
     return contentBuilder;
 }
 
+/// 转换成protobuf
 - (nullable NSData *)buildPlainTextData:(TSThread *)thread transaction:(SDSAnyWriteTransaction *)transaction
 {
     SSKProtoContentBuilder *_Nullable contentBuilder = [self contentBuilderWithThread:thread transaction:transaction];

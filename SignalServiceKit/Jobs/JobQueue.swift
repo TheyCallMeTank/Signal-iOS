@@ -79,6 +79,7 @@ public extension JobQueue {
     ) {
         owsAssertDebug(jobRecord.status == .ready)
 
+        // 添加任务到数据库
         jobRecord.anyInsert(transaction: transaction)
 
         transaction.addTransactionFinalizationBlock(

@@ -5,6 +5,21 @@
 
 import Foundation
 
+/// 持久地排队发送消息
+///
+/// 队列的操作（`MessageSenderOperation`使用`MessageSender`发送消息。
+///
+/// ## 重试行为
+/// 像所有JobQueue一样，MessageSenderJobQueue实现了操作错误的重试处理
+///
+/// “MessageSender”还包括它自己的重试逻辑，这是围绕用户更改注册ID或添加/删除设备来封装业务逻辑所必需的。
+/// 也就是说，有时MessageSender在被接受之前必须多次重新发送给收件人是*正常的*，
+/// 从应用程序的角度来看，这并不代表“失败”。
+///
+/// 因此，我们有内部非持久重试（MessageSender）和外部持久重试（MessageSenderJobQueue）。
+///
+/// 两者都尊重“error.isRetryable”约定，以确保我们在某些情况下不会继续重试（例如速率限制）
+
 /// Durably enqueues a message for sending.
 ///
 /// The queue's operations (`MessageSenderOperation`) uses `MessageSender` to send a message.
@@ -137,6 +152,7 @@ public class MessageSenderJobQueue: NSObject, JobQueue {
     }
 
     private var jobFutures = AtomicDictionary<String, Future<Void>>()
+    /// 消息入列
     private func add(
         message: OutgoingMessagePreparer,
         removeMessageAfterSending: Bool,
@@ -148,6 +164,7 @@ public class MessageSenderJobQueue: NSObject, JobQueue {
         assert(AppReadiness.isAppReady || CurrentAppContext().isRunningTests)
         do {
             let messageRecord = try message.prepareMessage(transaction: transaction)
+            // 创建消息发送任务
             let jobRecord = try MessageSenderJobRecord(
                 message: messageRecord,
                 removeMessageAfterSending: removeMessageAfterSending,
@@ -317,6 +334,7 @@ public class MessageSenderOperation: OWSOperation, DurableOperation {
     // MARK: OWSOperation
 
     override public func run() {
+        // 发送
         self.messageSender.sendMessage(message.asPreparer,
                                        success: {
                                         self.reportSuccess()

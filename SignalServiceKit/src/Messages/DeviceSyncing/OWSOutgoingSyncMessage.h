@@ -11,6 +11,9 @@ NS_ASSUME_NONNULL_BEGIN
 @class SSKProtoSyncMessage;
 @class SSKProtoSyncMessageBuilder;
 
+///  用于同步消息家族的抽象基类，这些同步消息负责保持多个注册设备的一致性。
+///  例如，共享联系人、共享群组、通知您的设备已发送的消息以及“阅读”收据。
+
 /**
  * Abstract base class used for the family of sync messages which take care
  * of keeping your multiple registered devices consistent. E.g. sharing contacts, sharing groups,

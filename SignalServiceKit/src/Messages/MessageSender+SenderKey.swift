@@ -102,6 +102,7 @@ extension MessageSender {
         }
     }
 
+    /// 过滤支持SenderKey的线程的参与者列表
     /// Filters the list of participants for a thread that support SenderKey
     func senderKeyStatus(
         for thread: TSThread,

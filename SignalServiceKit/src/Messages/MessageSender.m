@@ -339,6 +339,7 @@ const NSUInteger kOversizeTextMessageSizeThreshold = 2 * 1024;
                 [[OWSUploadOperation alloc] initWithAttachmentId:attachmentId
                                                       messageIds:@[ message.uniqueId ]
                                                         canUseV3:canUseV3];
+            // 附件上传完成再发送消息
             [sendMessageOperation addDependency:uploadAttachmentOperation];
             [OWSUploadOperation.uploadQueue addOperation:uploadAttachmentOperation];
         }

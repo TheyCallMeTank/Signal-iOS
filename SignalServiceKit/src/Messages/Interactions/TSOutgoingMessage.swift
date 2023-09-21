@@ -166,6 +166,12 @@ public extension TSOutgoingMessage {
 
     @objc
     var canSendWithSenderKey: Bool {
+        // 有时，我们可能会因为未知原因而无法发送SenderKey消息。
+        // 例如，服务器可能会拒绝消息，因为我们的一个收件人有一个无效的访问令牌，
+        // 但我们不知道哪个收件人是罪魁祸首。如果我们遇到任何这些非瞬时故障，
+        // 我们不应该用发件人密钥发送此消息。
+        // 通过用传统的扇子发送消息，这*应该*使事情井然有序，以便我们的下一个SenderKey消息能够成功发送。
+        
         // Sometimes we can fail to send a SenderKey message for an unknown reason. For example,
         // the server may reject the message because one of our recipients has an invalid access
         // token, but we don't know which recipient is the culprit. If we ever hit any of these
@@ -389,6 +395,10 @@ extension TSOutgoingMessage {
     func envelopeGroupIdWithTransaction(_ transaction: SDSAnyReadTransaction) -> Data? {
         (thread(tx: transaction) as? TSGroupThread)?.groupId
     }
+    
+    /// 指示此消息的proto是否应保存到MessageSendLog中，
+    /// 任何高音量或时间依赖性（键入指示器、呼叫等）都应设置为false。
+    /// 不可重新发送的内容提示并不一定意味着这应该是false设置为false（尽管它是一个很好的指标）
 
     /// Indicates whether or not this message's proto should be saved into the MessageSendLog
     ///

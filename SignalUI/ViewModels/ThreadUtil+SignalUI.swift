@@ -23,6 +23,7 @@ public extension ThreadUtil {
     ) -> TSOutgoingMessage {
         AssertIsOnMainThread()
 
+        // 准备对外发送的消息模型
         let outgoingMessagePreparer = OutgoingMessagePreparer(
             messageBody: messageBody,
             mediaAttachments: mediaAttachments,
@@ -201,6 +202,7 @@ extension OutgoingMessagePreparer {
             messageBuilder.quotedMessage = quotedMessage
             messageBuilder.isViewOnceMessage = isViewOnceMessage
 
+            // 生成对外发送的消息，这一步除了模型转换，主要是把所有收件人添加到消息模型中
             message = messageBuilder.build(transaction: transaction)
         }
 

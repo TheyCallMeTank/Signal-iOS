@@ -403,6 +403,10 @@ extension MessageSender {
                 return .value(())
             }
             Logger.info("Rotating signed pre-key before sending message.")
+            
+            // 在应用程序因预键更新失败而被禁用时，每次用户尝试发送消息时，请重新尝试预键更新。
+            // 仅尝试更新已签名的预密钥；更新它足以重新启用消息发送。
+            
             // Retry prekey update every time user tries to send a message while app is
             // disabled due to prekey update failures.
             //
@@ -574,6 +578,7 @@ extension MessageSender {
         return AnyPromise(sendMessageToService(message))
     }
 
+    /// 发送消息到服务器
     func sendMessageToService(_ message: TSOutgoingMessage) -> Promise<Void> {
         if DependenciesBridge.shared.appExpiry.isExpired {
             return Promise(error: AppExpiredError())
@@ -696,6 +701,9 @@ extension MessageSender {
             }
 
             if let contactThread = thread as? TSContactThread {
+                // 在“自我发送”又名“自我注释”的特殊情况下，我们只需要发送某些类型的消息。
+                //（特别是，常规数据消息仅通过其隐式同步消息发送。）
+                
                 // In the "self-send" aka "Note to Self" special case, we only need to send
                 // certain kinds of messages. (In particular, regular data messages are
                 // sent via their implicit sync message only.)
@@ -708,11 +716,14 @@ extension MessageSender {
             }
 
             if serviceIds.isEmpty {
+                // 所有收件人都已发送或可以跳过。注意：我们可能仍然需要发送同步成绩单。
+                
                 // All recipients are already sent or can be skipped. NOTE: We might still
                 // need to send a sync transcript.
                 return nil
             }
 
+            // 序列化
             guard let serializedMessage = buildAndRecordMessage(message, in: thread, tx: tx) else {
                 throw OWSAssertionError("Couldn't build message.")
             }
@@ -721,6 +732,7 @@ extension MessageSender {
                 throw OWSAssertionError("Not registered.")
             }
 
+            // 加密
             let senderCertificate: SenderCertificate = {
                 switch udManager.phoneNumberSharingMode(tx: tx) {
                 case .everybody:
@@ -1021,6 +1033,7 @@ extension MessageSender {
         in thread: TSThread,
         tx: SDSAnyWriteTransaction
     ) -> SerializedMessage? {
+        // 序列化Protobuf
         guard let plaintextData = message.buildPlainTextData(thread, transaction: tx) else {
             return nil
         }
@@ -1071,7 +1084,7 @@ extension MessageSender {
         }
 
         let deviceMessages = try buildDeviceMessages(messageSend: messageSend)
-
+        
         if shouldSkipMessageSend(messageSend, deviceMessages: deviceMessages) {
             DispatchQueue.global().async {
                 // This emulates the completion logic of an actual successful send (see below).
@@ -1273,6 +1286,7 @@ extension MessageSender {
         }
     }
 
+    /// 最后调网络发送的方法
     private func performMessageSendRequest(
         _ messageSend: OWSMessageSend,
         deviceMessages: [DeviceMessage]
