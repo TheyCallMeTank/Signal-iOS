@@ -238,6 +238,7 @@ public class MessageProcessor: NSObject {
             return
         }
 
+        // 注意任何比我们预期大的消息，但仍然要处理它们。这可能表明发送客户端行为不端。
         // Take note of any messages larger than we expect, but still process them.
         // This likely indicates a misbehaving sending client.
         if envelopeData.count > Self.largeEnvelopeWarningByteCount {
@@ -663,6 +664,8 @@ private struct ProcessingRequestBuilder {
             return .completed(error: nil)
 
         case .enqueueForGroupProcessing:
+            // 如果我们不能立即处理消息，我们会将其排队，以便在解密的同一事务中进行处理，以防止数据丢失。
+            
             // If we can't process the message immediately, we enqueue it for
             // for processing in the same transaction within which it was decrypted
             // to prevent data loss.
@@ -680,6 +683,13 @@ private struct ProcessingRequestBuilder {
             // 1. Not a GV2 message.
             // 2. A GV2 message that doesn't require updating the group.
             //
+            
+            // 立即处理消息的好处是，我们可以在用于解密的同一事务中完全处理消息。
+            // 这导致一个显著的perf利益诗句排队消息并等待该队列打开新事务和处理消息。
+            // 缺点是，如果我们*未能*处理此消息（例如，应用程序崩溃或被关闭），
+            // 我们将不得不在处理之前再次重新解密。
+            // 这是安全的，因为解密操作也会回滚（因为事务没有提交），而且应该很少见。
+            
             // The advantage to processing the message immediately is that we can full
             // process the message in the same transaction that we used to decrypt it.
             // This results in a significant perf benefit verse queueing the message

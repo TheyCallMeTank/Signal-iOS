@@ -264,6 +264,10 @@ public class SSKWebSocketNative: SSKWebSocket {
 
     private func listenForNextMessage() {
         DispatchQueue.global().async {
+            // * Use coarser lock in SSKWebSocketNative
+            // This isn’t strictly required, 
+            // but it makes the class easier to reason about, and it fixes a bug where writing to a web socket while that socket is being closed normally could allow the write error to be reported instead of the close error.
+            
             self.lock.withLock { self.webSocketTask }?.receive { [weak self] result in
                 self?.receivedMessage(result)
             }
@@ -286,6 +290,12 @@ public class SSKWebSocketNative: SSKWebSocket {
             listenForNextMessage()
 
         case .failure(let error):
+            // 对于某些套接字，我们阅读消息，
+            // 直到服务器关闭连接（我们检查关闭代码以确定它是否是一个优雅的拆解）。
+            // 因此，我们希望快速连续地收到最终消息并关闭框架。
+            // 我们通过反复调用“接收”来接收消息，直到我们收到错误。
+            // 不幸的是，这个过程可能会在我们有机会处理真正的关闭帧之前看到流已经关闭。
+            
             // For some sockets, we read messages until the server closes the
             // connection (and we inspect the close code to determine whether or not
             // it's a graceful teardown). As a result, we expect to receive the final

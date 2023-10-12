@@ -509,6 +509,7 @@ public class OWSWebSocket: NSObject {
         }
     }
 
+    /// 处理收到的消息
     private func handleIncomingMessage(_ message: WebSocketProtoWebSocketRequestMessage,
                                        currentWebSocket: WebSocketConnection) {
         assertOnQueue(Self.serialQueue)
@@ -516,6 +517,7 @@ public class OWSWebSocket: NSObject {
         var backgroundTask: OWSBackgroundTask? = OWSBackgroundTask(label: "handleIncomingMessage")
 
         let ackMessage = { (processingError: Error?, serverTimestamp: UInt64) in
+            // 确认收到消息回执
             let ackBehavior = MessageProcessor.handleMessageProcessingOutcome(error: processingError)
             switch ackBehavior {
             case .shouldAck:
